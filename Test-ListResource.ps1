@@ -1,7 +1,12 @@
-﻿$username       = "mk@mkaufmann.onmicrosoft.com" 
-$password       = "xxxxxxxxx" 
-$securePassword = ConvertTo-SecureString $Password -AsPlainText -Force 
-$Credentials    = New-Object System.Management.Automation.PSCredential($username, $securePassword) 
+﻿if (-not $Url)
+{
+    $Url = Read-Host "Enter the url to the test site:"
+}
+
+if (-not $Credentials)
+{
+    $Credentials = Get-Credential
+}
 
 $ConfigurationData = @{
     AllNodes = @(
@@ -21,7 +26,10 @@ Configuration TestListResource
     param
     (
         [Parameter(Mandatory=$false)]
-        [PSCredential]$Credential
+        [PSCredential]$Credential,
+
+        [Parameter(Mandatory=$false)]
+        [string]$Url
     )
 
     Import-DscResource -ModuleName xSharePointProvisioning   -Name ALIS_xList
@@ -30,20 +38,30 @@ Configuration TestListResource
     {
         xList GenericList
         {
-            Url = "https://mkaufmann.sharepoint.com/sites/ALMDays/Lists/MyCustomList"
+            Url = "$Url/Lists/MyCustomList"
             Ensure = "Present"
             Title = "My Custom List"
-            Description = "A sample generic list"
+            Description = "A sample generic list..."
             Template = "genericList"
+            Credentials = $Credential
+        }
+
+        xList DocLib
+        {
+            Url = "$Url/MyDocuments"
+            Ensure = "Present"
+            Title = "My Documents"
+            Description = "My Document Library"
+            Template = "DocumentLibrary"
             Credentials = $Credential
         }
     }
 }
 
-TestListResource -ConfigurationData $ConfigurationData -Credential $Credentials -verbose
+TestListResource -ConfigurationData $ConfigurationData -Url $Url -Credential $Credentials -verbose
 
 Restart-Service Winmgmt -force
 
 Start-DscConfiguration -Path .\TestListResource -Wait -Force -Verbose
 
-#Get-DscConfiguration
+Get-DscConfiguration
