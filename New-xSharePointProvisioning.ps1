@@ -1,5 +1,7 @@
 ﻿$modulePath = 'C:\Program Files\WindowsPowerShell\Modules'
 
+cd $PSScriptRoot
+
 # Delete module...
 Remove-Item -Path "$modulePath\xSharePointProvisioning" -Force -Recurse 
 
@@ -44,6 +46,19 @@ Copy-Item .\DSCResources\ALIS_xListItem.psm1 "$modulePath\xSharePointProvisionin
 
 #Get-DscResource -Name xListItem
 #Test-xDscResource -Name xListItem -Verbose
+
+$Url         = New-xDscResourceProperty -Name Url             -Type String       -Attribute Key      -Description "The full url of the file."
+$SourcePath  = New-xDscResourceProperty -Name SourcePath      -Type String       -Attribute Required -Description "The local path of the file."
+$Ensure      = New-xDscResourceProperty -Name Ensure          -Type String       -Attribute Write    -Description "Set this to 'Present' to ensure that the file is present. Set it to 'Absent' to ensure that the file is deleted. Default: 'Present'." -ValidateSet @("Present", "Absent")
+$Properties  = New-xDscResourceProperty -Name Properties      -Type Hashtable[]  -Attribute Write    -Description "The properties of the file."
+$credential  = New-xDscResourceProperty -Name Credentials     -Type PSCredential -Attribute Write    -Description "The credentials to use to login to the site."
+
+New-xDscResource -Name ALIS_xFile -FriendlyName xFile -ModuleName xSharePointProvisioning -Property @($Url, $SourcePath, $Ensure, $Properties, $credential) -Path $modulePath
+
+Copy-Item .\DSCResources\ALIS_xFile.psm1 "$modulePath\xSharePointProvisioning\DSCResources\ALIS_xFile\ALIS_xFile.psm1" -force
+
+Get-DscResource -Name xFile
+Test-xDscResource -Name xFile -Verbose
 
 # Override module
 copy-item .\xSharePointProvisioning.psd1 "$modulePath\xSharePointProvisioning\xSharePointProvisioning.psd1" -Force
