@@ -45,5 +45,18 @@ Copy-Item .\DSCResources\ALIS_xListItem.psm1 "$modulePath\xSharePointProvisionin
 #Get-DscResource -Name xListItem
 #Test-xDscResource -Name xListItem -Verbose
 
+# Create ProvisioningTemplate Resource
+$Path        = New-xDscResourceProperty -Name Path            -Type String        -Attribute Required  -Description "The path to the xml template."
+$Url         = New-xDscResourceProperty -Name Url             -Type String        -Attribute Key       -Description "The URl of the web where the template should be applied."
+$Ensure      = New-xDscResourceProperty -Name Ensure          -Type String        -Attribute Write     -Description "The template can currently only be applied and not removed." -ValidateSet @("Present")
+$Force       = New-xDscResourceProperty -Name Force           -Type Boolean       -Attribute Write     -Description "Apply the template anyway - even if the version has allready been applied."
+$credential  = New-xDscResourceProperty -Name Credentials     -Type PSCredential  -Attribute Write     -Description "The credentials to use to login to the site." 
+$Version     = New-xDscResourceProperty -Name Version         -Type String        -Attribute Read      -Description "The version of the template. The version gets persisted in the web."
+
+New-xDscResource -Name ALIS_xProvisioningTemplate -FriendlyName xProvisioningTemplate -ModuleName xSharePointProvisioning -Property @($Url, $Path, $Ensure, $Force, $credential, $Version) -Path $modulePath
+
+# Delete the psm1 and copy the assembly...
+#Remove-Item "$modulePath\xSharePointProvisioning\DSCResources\ALIS_xProvisioningTemplate\ALIS_xProvisioningTemplate.psm1" -force
+
 # Override module
 copy-item .\xSharePointProvisioning.psd1 "$modulePath\xSharePointProvisioning\xSharePointProvisioning.psd1" -Force
