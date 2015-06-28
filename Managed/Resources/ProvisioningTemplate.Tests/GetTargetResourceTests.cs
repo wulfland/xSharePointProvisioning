@@ -35,14 +35,15 @@ namespace ProvisioningTemplate.Tests
 
                 var output = powerShell.Invoke();
 
-                foreach (PSObject outputItem in output)
-                {
-                    if (outputItem != null)
-                    {
-                        var line = outputItem.BaseObject.ToString();
+                Assert.AreEqual(1, output.Count);
 
-                    }
-                }
+                var outputItem = output.First();
+                Assert.IsInstanceOfType(outputItem.BaseObject, typeof(Dictionary<string, string>));
+
+                var results = (Dictionary<string, string>)outputItem.BaseObject;
+                Assert.AreEqual(Settings.Default.IntegrationUrl, results["Url"]);
+                Assert.AreEqual("Absent", results["Ensure"]);
+                Assert.AreEqual("0", results["Version"]);
             }
         }
 
