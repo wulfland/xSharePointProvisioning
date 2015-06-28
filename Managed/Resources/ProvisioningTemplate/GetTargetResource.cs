@@ -3,6 +3,7 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Management.Automation;
     using System.Net;
@@ -26,24 +27,23 @@
         [Parameter(Mandatory = false)]
         public PSCredential Credentials { get; set; }
 
-        protected override void ProcessRecord()
+        protected override void BeginProcessing()
         {
+            SPOnlineConnection.CurrentConnection = Connection.Instantiate(new Uri(Url), Credentials);
+            base.BeginProcessing();
+        }
+
+        protected override void EndProcessing()
+        {
+            base.EndProcessing();
+        }
+
+        protected override void ExecuteCmdlet()
+        {
+            WriteVerbose("Begin processing of Get-TargetResource...");
             var currentResourceState = new Dictionary<string, string>();
 
-            SPOnlineConnection.CurrentConnection = Connection.Instantiate(new Uri(Url), Credentials);
-
-            if (!SelectedWeb.IsPropertyAvailable("Url"))
-            {
-                ClientContext.Load(SelectedWeb, w => w.Url);
-                ClientContext.ExecuteQueryRetry();
-
-                currentResourceState.Add("Url", SelectedWeb.Url);
-            }
-            else
-            {
-                currentResourceState.Add("Url", Url);
-            }
-
+            currentResourceState.Add("Url", Url);
 
             if (!System.IO.Path.IsPathRooted(Path))
             {
@@ -68,7 +68,14 @@
                 currentResourceState.Add("Version", version);
             }
 
+            WriteVerbose("End processing of Get-TargetResource...");
+
             WriteObject(currentResourceState);
+        }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
         }
     }
 }
