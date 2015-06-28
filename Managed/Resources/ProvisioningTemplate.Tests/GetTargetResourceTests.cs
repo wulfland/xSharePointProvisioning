@@ -21,19 +21,16 @@ namespace ProvisioningTemplate.Tests
         {
             var template = Path.Combine(TestContext.DeploymentDirectory, "template.xml");
 
-            var sutAssembly = Path.Combine(TestContext.DeploymentDirectory, "ALIS_xProvisioningTemplate.dll");
-
-            using (var powerShell = PowerShell.Create())
+            using (var powerShell = new ResourceHost(TestContext.DeploymentDirectory))
             {
-                powerShell.AddCommand("Import-Module").AddArgument(sutAssembly);
-                powerShell.Invoke();
+                var parameters = new Dictionary<string, string>()
+                {  
+                    { "Url", Settings.Default.IntegrationUrl },
+                    { "Path", template },
+                    { "Verbose", null }
+                };
 
-                powerShell.AddScript("Get-TargetResource " 
-                    + "-Url '" + Settings.Default.IntegrationUrl 
-                    + "' -Path '" + template 
-                    + "' -Verbose");
-
-                var output = powerShell.Invoke();
+                var output = powerShell.Execute("Get", parameters);
 
                 Assert.AreEqual(1, output.Count);
 
@@ -55,23 +52,15 @@ namespace ProvisioningTemplate.Tests
         {
             var template = Path.Combine(TestContext.DeploymentDirectory, "template.xml");
 
-            var sutAssembly = Path.Combine(TestContext.DeploymentDirectory, "ALIS_xProvisioningTemplate.dll");
-
-            using (var powerShell = PowerShell.Create())
+            using (var resourceHost = new ResourceHost(TestContext.DeploymentDirectory))
             {
-                powerShell.AddCommand("Import-Module").AddArgument(sutAssembly);
-                powerShell.Invoke();
-
-                powerShell.AddScript(
-                    "$password = '" + Settings.Default.O365Password + "' | ConvertTo-SecureString -asPlainText -Force;"
-                    + "$user = '" + Settings.Default.O365User + "';"
-                    + "$credential = New-Object System.Management.Automation.PSCredential($user,$password);"
-                    + "Get-TargetResource " 
-                    + "-Url '" + Settings.Default.O365Url + "' "
-                    + "-Credential $credential "
-                    + "-Path '" + template + "' -Verbose;");
-
-                var output = powerShell.Invoke();
+                var parameters = new Dictionary<string, string>()
+                {  
+                    { "Url", Settings.Default.O365Url },
+                    { "Path", template },
+                    { "Verbose", null }
+                };
+                var output = resourceHost.ExecuteWithCredentials("Get", Settings.Default.O365User, Settings.Default.O365Password, parameters);
 
                 Assert.AreEqual(1, output.Count);
 

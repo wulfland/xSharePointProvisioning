@@ -3,13 +3,9 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Management.Automation;
-    using System.Net;
     using Microsoft.SharePoint.Client;
-    using OfficeDevPnP.Core.Framework.Provisioning.Connectors;
-    using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers;
     using OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml;
     using OfficeDevPnP.PowerShell.Commands;
     using OfficeDevPnP.PowerShell.Commands.Base;
@@ -31,11 +27,6 @@
         {
             SPOnlineConnection.CurrentConnection = Connection.Instantiate(new Uri(Url), Credentials);
             base.BeginProcessing();
-        }
-
-        protected override void EndProcessing()
-        {
-            base.EndProcessing();
         }
 
         protected override void ExecuteCmdlet()
@@ -71,11 +62,6 @@
             WriteVerbose("End processing of Get-TargetResource...");
 
             WriteObject(currentResourceState);
-        }
-
-        protected override void ProcessRecord()
-        {
-            base.ProcessRecord();
         }
     }
 }
