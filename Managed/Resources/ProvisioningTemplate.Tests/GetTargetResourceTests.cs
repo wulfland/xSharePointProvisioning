@@ -4,15 +4,51 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using Microsoft.QualityTools.Testing.Fakes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProvisioningTemplate.Tests.Properties;
 using SharePointProvisioning.Resources.ProvisioningTemplate;
+using OfficeDevPnP.Core.AppModelExtensions;
+using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Fakes;
 
 namespace ProvisioningTemplate.Tests
 {
     [TestClass]
     public class GetTargetResourceTests
     {
+        [TestMethod]
+        [TestCategory(TestCategories.Unit)]
+        [DeploymentItem("template.xml")]
+        [DeploymentItem("ALIS_xProvisioningTemplate.dll")]
+        public void GetTargetResource_can_use_relative_path()
+        {
+            using (var context = ShimsContext.Create())
+            {
+                var fakeWeb = new ShimWeb();
+
+                var fakeContext = new ShimClientContext()
+                {
+                    WebGet = () => fakeWeb,
+                    ExecuteQuery = () => { }
+                };
+
+                ShimClientContext.AllInstances.ExecuteQuery = (c) => { };
+
+                using (var resourceHost = new ResourceHost(TestContext.DeploymentDirectory))
+                {
+                    var parameters = new Dictionary<string, string>()
+                    {  
+                        { "Url", Settings.Default.IntegrationUrl },
+                        { "Path", "template.xml" },
+                        { "Verbose", null }
+                    };
+
+                    var output = resourceHost.Execute("Get", parameters);
+                }
+            }
+        }
+
         [TestMethod]
         [TestCategory(TestCategories.Integration)]
         [DeploymentItem("template.xml")]
@@ -21,7 +57,7 @@ namespace ProvisioningTemplate.Tests
         {
             var template = Path.Combine(TestContext.DeploymentDirectory, "template.xml");
 
-            using (var powerShell = new ResourceHost(TestContext.DeploymentDirectory))
+            using (var resourceHost = new ResourceHost(TestContext.DeploymentDirectory))
             {
                 var parameters = new Dictionary<string, string>()
                 {  
@@ -30,7 +66,7 @@ namespace ProvisioningTemplate.Tests
                     { "Verbose", null }
                 };
 
-                var output = powerShell.Execute("Get", parameters);
+                var output = resourceHost.Execute("Get", parameters);
 
                 Assert.AreEqual(1, output.Count);
 
